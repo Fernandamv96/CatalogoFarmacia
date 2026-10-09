@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: catalogo-farmacia
+    env: python
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn core.wsgi:backend --bind 0.0.0.0:$PORT"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.10.12
+      - key: SECRET_KEY
+        generateValue: true

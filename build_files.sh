@@ -1,11 +1,8 @@
-# Crear entorno virtual
-python3 -m venv venv
+#!/usr/bin/env bash
+# Exit on error
+set -o errexit
 
-# Activar el entorno virtual
-source venv/bin/activate
-
-# Instalar dependencias dentro del entorno
 pip install -r requirements.txt
 
-# Recolectar archivos estáticos
-python3 manage.py collectstatic --noinput
+python manage.py collectstatic --no-input
+python manage.py migrate
