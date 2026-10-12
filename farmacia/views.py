@@ -34,6 +34,6 @@ class CatalogoFarmaciaDeleteView(DeleteView):
     template_name = 'farmacia/catalogo_confirm_delete.html'
     success_url = reverse_lazy('catalogo_list')
 
-    def delete(self, request, *args, **kwargs):
+    def form_valid(self, form):
         messages.success(self.request, "Producto eliminado correctamente.")
-        return super().delete(request, *args, **kwargs)
+        return super().form_valid(form)
