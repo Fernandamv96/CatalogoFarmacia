@@ -9,9 +9,18 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Vercel define la variable VERCEL=1 en sus entornos
 EN_VERCEL = os.environ.get('VERCEL') == '1'
 
-SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-solo-para-desarrollo-local')
-
 DEBUG = os.environ.get('DEBUG', 'False' if EN_VERCEL else 'True') == 'True'
+
+# SECRET_KEY es obligatoria fuera de desarrollo: sin ella la app no arranca.
+SECRET_KEY = os.environ.get('SECRET_KEY')
+if not SECRET_KEY:
+    if not DEBUG:
+        from django.core.exceptions import ImproperlyConfigured
+
+        raise ImproperlyConfigured(
+            'SECRET_KEY no está definida. Configúrala como variable de entorno (ver .env.example).'
+        )
+    SECRET_KEY = 'django-insecure-solo-para-desarrollo-local'
 
 ALLOWED_HOSTS = ['.vercel.app', 'localhost', '127.0.0.1']
 if os.environ.get('ALLOWED_HOSTS'):
@@ -23,6 +32,13 @@ if os.environ.get('CSRF_TRUSTED_ORIGINS'):
 
 # Vercel sirve por HTTPS a través de un proxy
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# Endurecimiento en producción (HTTPS detrás del proxy de Vercel)
+if not DEBUG:
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 3600  # subir gradualmente una vez verificado HTTPS en todos los dominios
+    SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
 
 INSTALLED_APPS = [
     'django.contrib.admin',
