@@ -6,3 +6,6 @@ staticfiles/
 venv/
 env/
 .vercel
+.env.*
+!.env.example
+*.zip
