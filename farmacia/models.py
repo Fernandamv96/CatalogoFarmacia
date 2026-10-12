@@ -25,3 +25,20 @@ class CatalogoFarmacia(models.Model):
     @property
     def esta_vencido(self):
         return self.fecha_vencimiento < timezone.now().date()
+
+    @property
+    def dias_para_vencer(self):
+        return (self.fecha_vencimiento - timezone.now().date()).days
+
+    @property
+    def estado(self):
+        """'vencido', 'por_vencer' (30 días o menos) o 'vigente'."""
+        if self.esta_vencido:
+            return 'vencido'
+        if self.dias_para_vencer <= 30:
+            return 'por_vencer'
+        return 'vigente'
+
+    @property
+    def stock_bajo(self):
+        return self.stock <= 5

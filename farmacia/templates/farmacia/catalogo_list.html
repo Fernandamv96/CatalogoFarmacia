@@ -1,60 +1,128 @@
 {% extends 'base.html' %}
+{% load l10n %}
+
+{% block title %}Catálogo{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h2>Catálogo de Medicamentos y Productos</h2>
-    <a href="{% url 'catalogo_create' %}" class="btn btn-success">+ Nuevo Producto</a>
-</div>
-
-<div class="card shadow-sm">
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-hover table-striped mb-0">
-                <thead class="table-dark">
-                    <tr>
-                        <th>ID</th>
-                        <th>Nombre</th>
-                        <th>Descripción</th>
-                        <th>Precio</th>
-                        <th>Stock</th>
-                        <th>Vencimiento</th>
-                        <th>Estado</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for item in productos %}
-                    <tr>
-                        <td>{{ item.id }}</td>
-                        <td class="fw-semibold">{{ item.nombre }}</td>
-                        <td>{{ item.descripcion|default:"-" }}</td>
-                        <td>${{ item.precio }}</td>
-                        <td>
-                            <span class="badge {% if item.stock > 5 %}bg-info text-dark{% else %}bg-danger{% endif %}">
-                                {{ item.stock }}
-                            </span>
-                        </td>
-                        <td>{{ item.fecha_vencimiento|date:"Y-m-d" }}</td>
-                        <td>
-                            {% if item.esta_vencido %}
-                                <span class="badge bg-danger">Vencido</span>
-                            {% else %}
-                                <span class="badge bg-success">Vigente</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            <a href="{% url 'catalogo_update' item.pk %}" class="btn btn-sm btn-outline-primary">Editar</a>
-                            <a href="{% url 'catalogo_delete' item.pk %}" class="btn btn-sm btn-outline-danger">Eliminar</a>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="8" class="text-center py-4 text-muted">No hay productos registrados en el catálogo.</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+<section class="hero">
+    <div class="hero-row">
+        <div>
+            <span class="eyebrow reveal"><span class="dot"></span><span class="shiny-text">Inventario en tiempo real</span></span>
+            <h1><span data-split>Catálogo de</span><br><span class="gradient-text">Medicamentos</span></h1>
+            <p class="reveal" style="--delay: 250ms">Gestiona productos, controla el stock y anticípate a los vencimientos desde un solo lugar.</p>
         </div>
+        <a href="{% url 'catalogo_create' %}" class="btn btn-primary reveal" style="--delay: 350ms">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+            Nuevo producto
+        </a>
+    </div>
+</section>
+
+<section class="stats">
+    <div class="stat spotlight teal reveal">
+        <div class="stat-label">
+            <span class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8 12 3 3 8v8l9 5 9-5Z"/><path d="m3 8 9 5 9-5M12 13v8"/></svg></span>
+            Productos
+        </div>
+        <div class="stat-value" data-count="{{ stats.total }}">{{ stats.total }}</div>
+    </div>
+    <div class="stat spotlight indigo reveal" style="--delay: 80ms">
+        <div class="stat-label">
+            <span class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span>
+            Valor del inventario
+        </div>
+        <div class="stat-value" data-count="{{ stats.valor_inventario|unlocalize }}" data-decimals="2" data-prefix="$">${{ stats.valor_inventario|floatformat:2 }}</div>
+    </div>
+    <div class="stat spotlight amber reveal" style="--delay: 160ms">
+        <div class="stat-label">
+            <span class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
+            Por vencer (30 días)
+        </div>
+        <div class="stat-value" data-count="{{ stats.por_vencer }}">{{ stats.por_vencer }}</div>
+    </div>
+    <div class="stat spotlight rose reveal" style="--delay: 240ms">
+        <div class="stat-label">
+            <span class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/></svg></span>
+            Vencidos
+        </div>
+        <div class="stat-value" data-count="{{ stats.vencidos }}">{{ stats.vencidos }}</div>
+    </div>
+</section>
+
+{% if productos %}
+<div class="toolbar reveal">
+    <label class="search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="search" class="input" type="search" placeholder="Buscar producto…  (pulsa /)" autocomplete="off" aria-label="Buscar producto">
+    </label>
+    <div class="chips" role="group" aria-label="Filtrar por estado">
+        <button class="chip active" type="button" data-filter="all">Todos</button>
+        <button class="chip" type="button" data-filter="vigente">Vigentes</button>
+        <button class="chip" type="button" data-filter="por_vencer">Por vencer</button>
+        <button class="chip" type="button" data-filter="vencido">Vencidos</button>
     </div>
 </div>
+{% endif %}
+
+<section class="products">
+    {% for item in productos %}
+    <article class="product spotlight reveal" style="--delay: {% cycle 0 60 120 180 %}ms"
+             data-name="{{ item.nombre|lower }} {{ item.descripcion|default:''|lower }}" data-status="{{ item.estado }}">
+        <div class="product-top">
+            <span class="product-avatar"><span class="gradient-text">{{ item.nombre|first|upper }}</span></span>
+            {% if item.estado == 'vencido' %}
+                <span class="badge badge-danger">Vencido</span>
+            {% elif item.estado == 'por_vencer' %}
+                <span class="badge badge-warning">Vence en {{ item.dias_para_vencer }} día{{ item.dias_para_vencer|pluralize }}</span>
+            {% else %}
+                <span class="badge badge-ok">Vigente</span>
+            {% endif %}
+        </div>
+
+        <h3>{{ item.nombre }}</h3>
+        <p class="product-desc">{{ item.descripcion|default:"Sin descripción." }}</p>
+
+        <div class="product-meta">
+            <div>
+                <span class="meta-label">Precio</span>
+                <span class="meta-value">${{ item.precio }}</span>
+            </div>
+            <div>
+                <span class="meta-label">Stock</span>
+                <span class="meta-value {% if item.stock_bajo %}low{% endif %}">{{ item.stock }} u.</span>
+                <div class="stock-bar {% if item.stock_bajo %}low{% endif %}"><i style="--w: {% widthratio item.stock stats.stock_max 100 %}%"></i></div>
+            </div>
+            <div>
+                <span class="meta-label">Vence</span>
+                <span class="meta-value">{{ item.fecha_vencimiento|date:"d/m/y" }}</span>
+            </div>
+        </div>
+
+        <div class="product-actions">
+            <a href="{% url 'catalogo_update' item.pk %}" class="btn btn-sm">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                Editar
+            </a>
+            <a href="{% url 'catalogo_delete' item.pk %}" class="btn btn-sm btn-danger">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>
+                Eliminar
+            </a>
+        </div>
+    </article>
+    {% empty %}
+    <div class="empty spotlight reveal">
+        <div class="empty-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#a5b4fc" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/><path d="m8.5 8.5 7 7"/></svg>
+        </div>
+        <h3>Tu catálogo está vacío</h3>
+        <p>No hay productos registrados en el catálogo. Empieza agregando el primero.</p>
+        <a href="{% url 'catalogo_create' %}" class="btn btn-primary">+ Agregar producto</a>
+    </div>
+    {% endfor %}
+
+    <div class="empty spotlight no-results">
+        <h3>Sin resultados</h3>
+        <p>Ningún producto coincide con la búsqueda o el filtro.</p>
+    </div>
+</section>
 {% endblock %}

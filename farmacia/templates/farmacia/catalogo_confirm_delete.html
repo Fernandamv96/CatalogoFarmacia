@@ -1,25 +1,31 @@
 {% extends 'base.html' %}
 
+{% block title %}Eliminar {{ object.nombre }}{% endblock %}
+
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-6">
-        <div class="card shadow-sm border-danger">
-            <div class="card-header bg-danger text-white">
-                <h4 class="mb-0">Confirmar Eliminación</h4>
-            </div>
-            <div class="card-body">
-                <p>¿Estás seguro de que deseas eliminar el producto <strong>"{{ object.nombre }}"</strong> (ID: {{ object.id }})?</p>
-                <div class="alert alert-warning">Esta acción no se puede deshacer.</div>
-                
-                <form method="post">
-                    {% csrf_token %}
-                    <div class="d-flex justify-content-between mt-4">
-                        <a href="{% url 'catalogo_list' %}" class="btn btn-secondary">Cancelar</a>
-                        <button type="submit" class="btn btn-danger">Sí, eliminar</button>
-                    </div>
-                </form>
+<div class="form-shell">
+    <div class="form-card spotlight danger-card reveal">
+        <div class="danger-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg>
+        </div>
+        <h1 data-split>¿Eliminar producto?</h1>
+        <p class="lead">Esta acción no se puede deshacer.</p>
+
+        <div class="delete-target">
+            <span class="product-avatar"><span class="gradient-text">{{ object.nombre|first|upper }}</span></span>
+            <div>
+                <strong>{{ object.nombre }}</strong>
+                <span>ID {{ object.id }} · ${{ object.precio }} · {{ object.stock }} en stock</span>
             </div>
         </div>
+
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-actions">
+                <a href="{% url 'catalogo_list' %}" class="btn btn-ghost">Cancelar</a>
+                <button type="submit" class="btn btn-danger">Sí, eliminar</button>
+            </div>
+        </form>
     </div>
 </div>
 {% endblock %}
