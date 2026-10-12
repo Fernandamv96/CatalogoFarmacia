@@ -9,6 +9,19 @@ class CatalogoFarmaciaListView(ListView):
     template_name = 'farmacia/catalogo_list.html'
     context_object_name = 'productos'
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        productos = list(context['productos'])
+        context['stats'] = {
+            'total': len(productos),
+            'stock_total': sum(p.stock for p in productos),
+            'valor_inventario': sum(p.precio * p.stock for p in productos),
+            'por_vencer': sum(1 for p in productos if p.estado == 'por_vencer'),
+            'vencidos': sum(1 for p in productos if p.estado == 'vencido'),
+            'stock_max': max((p.stock for p in productos), default=0),
+        }
+        return context
+
 class CatalogoFarmaciaCreateView(CreateView):
     model = CatalogoFarmacia
     form_class = CatalogoFarmaciaForm
